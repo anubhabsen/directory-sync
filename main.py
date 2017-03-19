@@ -1,3 +1,4 @@
+import hashlib
 import re
 import os
 import mimetypes
@@ -38,6 +39,22 @@ def list_files(flag, argv):
         table.append([file, str(os.path.getsize(path)), str(time), get_type(path)])
     format_data(table)
 
+def get_hash(path):
+    with open(path, 'rb') as file_hash:
+        hash_val = hashlib.md5()
+        while True:
+            data = file_hash.read(4096)
+            if not data:
+                break
+            hash_val.update(data)
+        return hash_val.hexdigest()
+
+def change_details(path):
+    return(get_hash(path), os.path.getmtime(path))
+
 if __name__ == '__main__':
     if sys.argv[1] == 'index':
         list_files(sys.argv[2], sys.argv[3:])
+    elif sys.argv[1] == 'hash':
+        print(change_details(sys.argv[2]))
+
