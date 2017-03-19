@@ -93,9 +93,18 @@ if __name__ == '__main__':
         command = input('>> ')
         command = command.split(' ')
         if command[0] == 'index':
-            pass
+            if len(command) <= 1:
+                print('use arguments: longlist/ shortlist/ regex')
+            else:
+                if command[1] == 'regex' and len(command) <= 2:
+                    print('use arguments: regex missing')
+                else:
+                    list_files(command[1], command[2:])
         elif command[0] == 'hash':
-            pass
+            if len(command) <= 1:
+                print('use arguments: name of the file')
+            else:
+                print(change_details(curr_path + command[1]))
         elif command[0] == 'download':
             comms(3, command[-1])
         else:
