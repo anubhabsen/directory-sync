@@ -12,6 +12,8 @@ for file in os.listdir(curr_path):
     if os.path.isfile(os.path.join(curr_path, file)):
         shared_files.append(file)
 
+############## Files list
+
 def format_data(table):
     max = 0
     for row in table:
@@ -41,6 +43,8 @@ def list_files(flag, argv):
         table.append([file, str(os.path.getsize(path)), str(time), get_type(path)])
     format_data(table)
 
+############## Hashing
+
 def get_hash(path):
     with open(path, 'rb') as file_hash:
         hash_val = hashlib.md5()
@@ -54,6 +58,8 @@ def get_hash(path):
 def change_details(path):
     return(get_hash(path), os.path.getmtime(path))
 
+############## Comms
+
 def comms(command, argv):
     sock = socket.socket()
     sock.connect((host, port))
@@ -65,6 +71,8 @@ def comms(command, argv):
         sock.send(struct.pack('II', 3, sys.getsizeof(argv)))
         sock.send(argv.encode())
     sock.close()
+
+############## Main
 
 if __name__ == '__main__':
     port = 60000
@@ -78,3 +86,5 @@ if __name__ == '__main__':
             pass
         elif command[0] == 'download':
             comms(3, command[-1])
+        else:
+            print(command[0], 'is an invalid command')
