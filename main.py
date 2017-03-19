@@ -32,6 +32,9 @@ def list_files(flag, argv):
             end_time = float(argv[1])
             if time < start_time or time > end_time:
                 continue
+        elif flag == 'regex':
+            if not re.fullmatch('.*' + argv[0], file):
+                continue
         table.append([file, str(os.path.getsize(path)), str(time), get_type(path)])
     format_data(table)
 
