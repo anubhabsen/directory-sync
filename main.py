@@ -6,7 +6,7 @@ import mimetypes
 import sys
 import struct
 
-curr_path = '.'
+curr_path = './client/'
 shared_files = []
 for file in os.listdir(curr_path):
     if os.path.isfile(os.path.join(curr_path, file)):
@@ -58,6 +58,17 @@ def get_hash(path):
 def change_details(path):
     return(get_hash(path), os.path.getmtime(path))
 
+############## Download
+
+def download_file(name, sock):
+    path = curr_path + name
+    with open(path, 'wb') as file:
+        while True:
+            data = sock.recv(2048)
+            if not data:
+                break
+            file.write(data)
+
 ############## Comms
 
 def comms(command, argv):
@@ -70,6 +81,7 @@ def comms(command, argv):
     elif command == 3:
         sock.send(struct.pack('II', 3, sys.getsizeof(argv)))
         sock.send(argv.encode())
+        download_file(argv, sock)
     sock.close()
 
 ############## Main
