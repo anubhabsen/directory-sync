@@ -1,8 +1,10 @@
 import hashlib
 import re
 import os
+import socket
 import mimetypes
 import sys
+import struct
 
 curr_path = '.'
 shared_files = []
@@ -52,9 +54,27 @@ def get_hash(path):
 def change_details(path):
     return(get_hash(path), os.path.getmtime(path))
 
-if __name__ == '__main__':
-    if sys.argv[1] == 'index':
-        list_files(sys.argv[2], sys.argv[3:])
-    elif sys.argv[1] == 'hash':
-        print(change_details(sys.argv[2]))
+def comms(command, argv):
+    sock = socket.socket()
+    sock.connect((host, port))
+    if command == 1:
+        pass
+    elif command == 2:
+        pass
+    elif command == 3:
+        sock.send(struct.pack('II', 3, sys.getsizeof(argv)))
+        sock.send(argv.encode())
+    sock.close()
 
+if __name__ == '__main__':
+    port = 60000
+    host = ""
+    while True:
+        command = input('>> ')
+        command = command.split(' ')
+        if command[0] == 'index':
+            pass
+        elif command[0] == 'hash':
+            pass
+        elif command[0] == 'download':
+            comms(3, command[-1])
