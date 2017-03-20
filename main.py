@@ -33,7 +33,6 @@ def download_index(sock):
 ############## Comms
 
 def comms(command, argv):
-    print('argument received', argv)
     sock = socket.socket()
     sock.connect((host, port))
     if command == 1:

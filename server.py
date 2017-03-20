@@ -72,8 +72,11 @@ def send_hash(flag, argv, conn):
         shared_files = [argv[0]]
     for file in shared_files:
         path = os.path.join(curr_path, file)
-        time = os.path.getmtime(path)
-        table.append([file, str(get_hash(path)), str(time)])
+        if not os.path.isfile(path):
+            print('The file', argv[0], 'doesn\'t exist.')
+        else:
+            time = os.path.getmtime(path)
+            table.append([file, str(get_hash(path)), str(time)])
     sending = format_data(table)
     conn.send(sending.encode())
 
