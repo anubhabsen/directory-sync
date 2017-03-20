@@ -14,49 +14,49 @@ for file in os.listdir(curr_path):
 
 ############## Files list
 
-def format_data(table):
-    max = 0
-    for row in table:
-        for word in row:
-            if max < len(word):
-                max = len(word)
-    col = max + 3
-    for row in table:
-        print("".join(word.ljust(col) for word in row))
+# def format_data(table):
+#     max = 0
+#     for row in table:
+#         for word in row:
+#             if max < len(word):
+#                 max = len(word)
+#     col = max + 3
+#     for row in table:
+#         print("".join(word.ljust(col) for word in row))
 
-def get_type(path):
-    return mimetypes.guess_type(path)[0] or 'text/plain'
+# def get_type(path):
+#     return mimetypes.guess_type(path)[0] or 'text/plain'
 
-def list_files(flag, argv):
-    table = [['Title', 'Size', 'TimeStamp', 'Type']]
-    for file in shared_files:
-        time = os.path.getmtime(os.path.join(curr_path, file))
-        path = os.path.join(curr_path, file)
-        if flag == 'shortlist':
-            start_time = float(argv[0])
-            end_time = float(argv[1])
-            if time < start_time or time > end_time:
-                continue
-        elif flag == 'regex':
-            if not re.fullmatch('.*' + argv[0], file):
-                continue
-        table.append([file, str(os.path.getsize(path)), str(time), get_type(path)])
-    format_data(table)
+# def list_files(flag, argv):
+#     table = [['Title', 'Size', 'TimeStamp', 'Type']]
+#     for file in shared_files:
+#         time = os.path.getmtime(os.path.join(curr_path, file))
+#         path = os.path.join(curr_path, file)
+#         if flag == 'shortlist':
+#             start_time = float(argv[0])
+#             end_time = float(argv[1])
+#             if time < start_time or time > end_time:
+#                 continue
+#         elif flag == 'regex':
+#             if not re.fullmatch('.*' + argv[0], file):
+#                 continue
+#         table.append([file, str(os.path.getsize(path)), str(time), get_type(path)])
+#     format_data(table)
 
 ############## Hashing
 
-def get_hash(path):
-    with open(path, 'rb') as file_hash:
-        hash_val = hashlib.md5()
-        while True:
-            data = file_hash.read(4096)
-            if not data:
-                break
-            hash_val.update(data)
-        return hash_val.hexdigest()
+# def get_hash(path):
+#     with open(path, 'rb') as file_hash:
+#         hash_val = hashlib.md5()
+#         while True:
+#             data = file_hash.read(4096)
+#             if not data:
+#                 break
+#             hash_val.update(data)
+#         return hash_val.hexdigest()
 
-def change_details(path):
-    return(get_hash(path), os.path.getmtime(path))
+# def change_details(path):
+#     return(get_hash(path), os.path.getmtime(path))
 
 ############## Download
 
@@ -69,14 +69,28 @@ def download_file(name, sock):
                 break
             file.write(data)
 
+def download_index(sock):
+    while True:
+        data = sock.recv(2048)
+        if not data:
+            break
+        print(data.decode())
+
 ############## Comms
 
 def comms(command, argv):
+    print('argument received', argv)
     sock = socket.socket()
     sock.connect((host, port))
     if command == 1:
+        sock.send(struct.pack('II', 1, sys.getsizeof(argv)))
+        sock.send(argv.encode())
+        download_index(sock)
         pass
     elif command == 2:
+        sock.send(struct.pack('II', 2, sys.getsizeof(argv)))
+        sock.send(argv.encode())
+        download_index(sock)
         pass
     elif command == 3:
         sock.send(struct.pack('II', 3, sys.getsizeof(argv)))
@@ -91,7 +105,7 @@ if __name__ == '__main__':
     host = ""
     while True:
         command = input('>> ')
-        command = command.split(' ')
+        command = command.split(' ', 1)
         if command[0] == 'index':
             if len(command) <= 1:
                 print('use arguments: longlist/ shortlist/ regex')
@@ -99,13 +113,15 @@ if __name__ == '__main__':
                 if command[1] == 'regex' and len(command) <= 2:
                     print('use arguments: regex missing')
                 else:
-                    list_files(command[1], command[2:])
+                    comms(1, command[1])
+            pass
         elif command[0] == 'hash':
             if len(command) <= 1:
                 print('use arguments: name of the file')
             else:
-                print(change_details(curr_path + command[1]))
+                comms(2, command[1])
+            pass
         elif command[0] == 'download':
-            comms(3, command[-1])
+            comms(3, command[1])
         else:
             print(command[0], 'is an invalid command')
