@@ -8,11 +8,13 @@ from threading import Thread
 import handler
 import struct
 from server import Server
+import time
 
 class Client(Thread):
     def __init__(self, curr_path = './client', port = 60000):
         Thread.__init__(self)
         self.port = port
+        self.last_synced = time.time()
         self.curr_path = curr_path
         self.host = ""
 
@@ -48,10 +50,32 @@ class Client(Thread):
                 else:
                     print('Flags are incorrect. Usage: TCP or UDP')
             elif command[0] == 'exit':
-                print('yas')
-                sys.exit()
+                quit()
             else:
                 print(command[0], 'is an invalid command')
+
+            curr_time = time.time()
+            if curr_time - self.last_synced >= 2:
+                self.last_synced = time.time()
+                self.sync_folders()
+
+    def sync_folders(self):
+        print('synchronising')
+        files_list1 = self.comms(2, 'checkall', True)[1:]
+        files_list2 = []
+        for file in os.listdir(self.curr_path):
+            if os.path.isfile(os.path.join(self.curr_path, file)):
+                files_list2.append(file)
+        for file in files_list1:
+            name = file[0]
+            if name in files_list2:
+                # res = handler.change_details(self.curr_path + name)
+                res_hash = handler.get_hash(self.curr_path + name)
+                res_time = int(os.path.getmtime(self.curr_path + name))
+                if res_hash != file[1] and res_time < file[2]:
+                    self.comms(3, name)
+            else:
+                self.comms(3, name)
 
     def comms(self, command, argv, neg_print = False):
         sock = socket.socket()
@@ -96,7 +120,7 @@ class Client(Thread):
 
         client_hash = handler.get_hash(path)
         server_hash = self.comms(2, 'verify ' + name, True)[1][1]
-        os.utime(path, (os.path.getatime(path), int(comms(2, 'verify ' + name, True)[1][2])))
+        os.utime(path, (os.path.getatime(path), int(self.comms(2, 'verify ' + name, True)[1][2])))
         print('server hash', server_hash, 'client hash', client_hash)
         if server_hash.startswith(client_hash):
             print('file transfer successful')
@@ -125,9 +149,9 @@ if __name__ == '__main__':
     port2 = int(os.environ.get('port2_no') or port2)
 
     if port % 2 == 0:
-        dir2 = './dir_one'
+        dir2 = './dir_one/'
     else:
-        dir2 = './dir_two'
+        dir2 = './dir_two/'
 
     server = Server(dir2, port)
     client = Client(dir2, port2)
