@@ -1,35 +1,29 @@
+#!/usr/local/bin/python3
+
 import hashlib
 import re
 import os
 import socket
 import json
+from threading import Thread
 import mimetypes
 import sys
 import struct
 import handler
 
-port = 60000
-sock = socket.socket()
-host = ""
-
-curr_path = './server/'
-
-sock.bind((host, port))
-sock.listen(5)
-
-def send_index(flag, argv, conn):
+def send_index(flag, argv, conn, curr_path):
 
     table = handler.list_dir(flag, argv, curr_path)
     sending = json.dumps(table)
     conn.send(sending.encode())
 
-def send_hash(flag, argv, conn):
+def send_hash(flag, argv, conn, curr_path):
 
     table = handler.list_hash(flag, argv, curr_path)
     sending = json.dumps(table)
     conn.send(sending.encode())
 
-def send_file(name, conn):
+def send_file(name, conn, curr_path):
 
     path = curr_path + name
     file = open(path, 'rb')
@@ -40,7 +34,7 @@ def send_file(name, conn):
         file_loc = file.read(2048)
     file.close()
 
-def comms():
+def comms(conn, curr_path):
 
     data = conn.recv(struct.calcsize('II'))
     command, argv_size = struct.unpack('II', data)
@@ -50,21 +44,32 @@ def comms():
         cmd = cmd.split(' ')
         flag = cmd[0]
         argv = cmd[1:]
-        send_index(flag, argv, conn)
+        send_index(flag, argv, conn, curr_path)
         pass
     elif command == 2:
         cmd = conn.recv(argv_size).decode().split(' ')
         flag = cmd[0]
         argv = cmd[1:]
-        send_hash(flag, argv, conn)
+        send_hash(flag, argv, conn, curr_path)
         pass
     elif command == 3:
         argv = conn.recv(argv_size)
-        send_file(argv.decode(), conn)
+        send_file(argv.decode(), conn, curr_path)
 
-while True:
-    conn, address = sock.accept()
-    print('Got a connection from ', address)
-    comms()
-    print('Commenced sending')
-    conn.close()
+class Server(Thread):
+    def __init__(self, curr_path = './server/', port = 60000):
+        Thread.__init__(self)
+        self.curr_path = curr_path
+        host = os.environ.get('host_name') or ""
+        self.sock = socket.socket()
+        self.sock.bind((host, port))
+        self.sock.listen(5)
+
+    def run(self):
+        while True:
+            conn, address = self.sock.accept()
+            print('Got a connection from ', address)
+            comms(conn, self.curr_path)
+            print('Commenced sending')
+            conn.close()
+
