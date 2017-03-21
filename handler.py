@@ -14,6 +14,7 @@ def format_data(table):
     col = max + 3
     for row in table:
         file_list += "".join(word.ljust(col) for word in row) + '\n'
+    print(file_list)
     return file_list
 
 def list_dir(flag, argv, curr_path):

@@ -1,6 +1,8 @@
 import os
 import socket
+import json
 import sys
+import handler
 import struct
 
 curr_path = './client/'
@@ -12,6 +14,7 @@ for file in os.listdir(curr_path):
 ############## Download
 
 def download_file(name, sock):
+    server_hash = struct.unpack('256s', sock.recv(256))[0].decode()
     path = curr_path + name
     with open(path, 'wb') as file:
         while True:
@@ -20,12 +23,21 @@ def download_file(name, sock):
                 break
             file.write(data)
 
+    client_hash = handler.get_hash(path)
+    print('server hash', server_hash, 'client hash', client_hash)
+    if server_hash.startswith(client_hash):
+        print('file transfer successful')
+    else:
+        print('file transfer unsuccessful')
+
 def download_index(sock):
+    res = ''
     while True:
         data = sock.recv(2048)
         if not data:
             break
-        print(data.decode())
+        res += data.decode()
+    handler.format_data(json.loads(res))
 
 ############## Comms
 
