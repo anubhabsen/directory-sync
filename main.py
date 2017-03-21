@@ -1,8 +1,5 @@
-import hashlib
-import re
 import os
 import socket
-import mimetypes
 import sys
 import struct
 
