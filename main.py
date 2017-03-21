@@ -47,7 +47,15 @@ def comms(command, argv):
     if command == 1:
         sock.send(struct.pack('II', 1, sys.getsizeof(argv)))
         sock.send(argv.encode())
+        print('Server files')
+        print('=============')
         download_index(sock)
+        print('CLient files')
+        print('=============')
+        argv = argv.split(' ')
+        flag = argv[0]
+        arg = argv[1:0]
+        handler.format_data(handler.list_dir(flag, arg, curr_path))
         pass
     elif command == 2:
         sock.send(struct.pack('II', 2, sys.getsizeof(argv)))
