@@ -68,17 +68,24 @@ def send_hash(flag, argv, conn):
         if os.path.isfile(os.path.join(curr_path, file)):
             shared_files.append(file)
     table = [['File', 'Hash Value', 'Time Modified']]
-    if flag == 'verify':
-        shared_files = [argv[0]]
-    for file in shared_files:
-        path = os.path.join(curr_path, file)
-        if not os.path.isfile(path):
-            print('The file', argv[0], 'doesn\'t exist.')
-        else:
-            time = os.path.getmtime(path)
-            table.append([file, str(get_hash(path)), str(time)])
-    sending = format_data(table)
-    conn.send(sending.encode())
+    if flag != 'verify' and flag != 'checkall':
+        sending = 'incorrect flag given. Usage: flag: verify/ checkall'
+        conn.send(sending.encode())
+    else:
+        if flag == 'verify':
+            shared_files = [argv[0]]
+        for file in shared_files:
+            path = os.path.join(curr_path, file)
+            if not os.path.isfile(path):
+                # print('The file', argv[0], 'doesn\'t exist.')
+                sending = 'The file ' + argv[0] + ' doesn\'t exist.'
+                conn.send(sending.encode())
+                return
+            else:
+                time = os.path.getmtime(path)
+                table.append([file, str(get_hash(path)), str(time)])
+        sending = format_data(table)
+        conn.send(sending.encode())
 
 def send_file(name, conn):
     path = curr_path + name

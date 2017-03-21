@@ -62,9 +62,13 @@ if __name__ == '__main__':
         if command[0] == 'index':
             if len(command) <= 1:
                 print('use arguments: longlist/ shortlist/ regex')
+            elif (command[1].startswith('longlist') == False and command[1].startswith('shortlist') == False and command[1].startswith('regex') == False):
+                print('incorrect flag')
             else:
                 if command[1] == 'regex' and len(command) <= 2:
                     print('use arguments: regex missing')
+                elif command[1] == 'shortlist' and len(command) != 4:
+                    print('limits of shortlist not proper')
                 else:
                     comms(1, command[1])
             pass
@@ -75,6 +79,12 @@ if __name__ == '__main__':
                 comms(2, command[1])
             pass
         elif command[0] == 'download':
-            comms(3, command[1])
+            splitarg = command[1].split(' ')
+            if splitarg[0] == 'TCP':
+                comms(3, splitarg[1])
+            elif splitarg[0] == 'UDP':
+                print('todo')
+            else:
+                print('Flags are incorrect. Usage: TCP or UDP')
         else:
             print(command[0], 'is an invalid command')
