@@ -33,7 +33,7 @@ def send_file(name, conn):
 
     path = curr_path + name
     file = open(path, 'rb')
-    conn.send(struct.pack('256s', handler.get_hash(path).encode()))
+    # conn.send(struct.pack('256s', handler.get_hash(path).encode()))
     file_loc = file.read(2048)
     while file_loc:
         conn.send(file_loc)

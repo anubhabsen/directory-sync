@@ -14,7 +14,7 @@ for file in os.listdir(curr_path):
 ############## Download
 
 def download_file(name, sock):
-    server_hash = struct.unpack('256s', sock.recv(256))[0].decode()
+    # server_hash = struct.unpack('256s', sock.recv(256))[0].decode()
     path = curr_path + name
     with open(path, 'wb') as file:
         while True:
@@ -24,24 +24,28 @@ def download_file(name, sock):
             file.write(data)
 
     client_hash = handler.get_hash(path)
+    server_hash = comms(2, 'verify ' + name, True)[1][1]
+    os.utime(path, (os.path.getatime(path), int(comms(2, 'verify ' + name, True)[1][2])))
     print('server hash', server_hash, 'client hash', client_hash)
     if server_hash.startswith(client_hash):
         print('file transfer successful')
     else:
         print('file transfer unsuccessful')
 
-def download_index(sock):
+def download_index(sock, neg_print = False):
     res = ''
     while True:
         data = sock.recv(2048)
         if not data:
             break
         res += data.decode()
+    if neg_print:
+        return json.loads(res)
     handler.format_data(json.loads(res))
 
 ############## Comms
 
-def comms(command, argv):
+def comms(command, argv, neg_print = False):
     sock = socket.socket()
     sock.connect((host, port))
     if command == 1:
@@ -49,7 +53,7 @@ def comms(command, argv):
         sock.send(argv.encode())
         print('Server files')
         print('=============')
-        download_index(sock)
+        retval = download_index(sock, neg_print)
         print('CLient files')
         print('=============')
         argv = argv.split(' ')
@@ -60,13 +64,14 @@ def comms(command, argv):
     elif command == 2:
         sock.send(struct.pack('II', 2, sys.getsizeof(argv)))
         sock.send(argv.encode())
-        download_index(sock)
+        retval = download_index(sock, neg_print)
         pass
     elif command == 3:
         sock.send(struct.pack('II', 3, sys.getsizeof(argv)))
         sock.send(argv.encode())
-        download_file(argv, sock)
+        retval = download_file(argv, sock)
     sock.close()
+    return retval
 
 ############## Main
 
