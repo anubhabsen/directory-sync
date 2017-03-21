@@ -3,6 +3,7 @@ import mimetypes
 import hashlib
 import re
 import sys
+import datetime
 
 def format_data(table):
     file_list = ''
@@ -24,7 +25,7 @@ def list_dir(flag, argv, curr_path):
             shared_files.append(file)
     table = [['Title', 'Size', 'TimeStamp', 'Type']]
     for file in shared_files:
-        time = os.path.getmtime(os.path.join(curr_path, file))
+        time = (datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(curr_path, file))).strftime('%Y-%m-%d %H:%M:%S'))
         path = os.path.join(curr_path, file)
         if flag == 'shortlist':
             start_time = float(argv[0])
@@ -66,6 +67,6 @@ def list_hash(flag, argv, curr_path):
                 sending = 'The file ' + argv[0] + ' doesn\'t exist.'
                 return sending
             else:
-                time = os.path.getmtime(path)
+                time = (datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(curr_path, file))).strftime('%Y-%m-%d %H:%M:%S'))
                 table.append([file, str(get_hash(path)), str(time)])
                 return table
