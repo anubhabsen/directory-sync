@@ -49,8 +49,9 @@ def comms(command, argv, neg_print = False):
     sock = socket.socket()
     sock.connect((host, port))
     if command == 1:
-        sock.send(struct.pack('II', 1, sys.getsizeof(argv)))
-        sock.send(argv.encode())
+        string_form = bytes(argv, 'utf-8')
+        data = struct.pack("II%ds" % (len(string_form),), command, len(string_form), string_form)
+        sock.send(data)
         print('Server files')
         print('=============')
         retval = download_index(sock, neg_print)
@@ -62,13 +63,15 @@ def comms(command, argv, neg_print = False):
         handler.format_data(handler.list_dir(flag, arg, curr_path))
         pass
     elif command == 2:
-        sock.send(struct.pack('II', 2, sys.getsizeof(argv)))
-        sock.send(argv.encode())
+        string_form = bytes(argv, 'utf-8')
+        data = struct.pack("II%ds" % (len(string_form),), command, len(string_form), string_form)
+        sock.send(data)
         retval = download_index(sock, neg_print)
         pass
     elif command == 3:
-        sock.send(struct.pack('II', 3, sys.getsizeof(argv)))
-        sock.send(argv.encode())
+        string_form = bytes(argv, 'utf-8')
+        data = struct.pack("II%ds" % (len(string_form),), command, len(string_form), string_form)
+        sock.send(data)
         retval = download_file(argv, sock)
     sock.close()
     return retval

@@ -71,4 +71,4 @@ def list_hash(flag, argv, curr_path):
                 time = int(os.path.getmtime(os.path.join(curr_path, file)))
                 # time = (datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(curr_path, file))).strftime('%Y-%m-%d %H:%M:%S'))
                 table.append([file, str(get_hash(path)), str(time)])
-                return table
+        return table
