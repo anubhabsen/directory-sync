@@ -7,6 +7,8 @@ import sys
 from threading import Thread
 import handler
 import struct
+import subprocess
+import stat
 from server import Server
 import time
 
@@ -76,6 +78,18 @@ class Client(Thread):
                     self.comms(3, name)
             else:
                 self.comms(3, name)
+
+        if self.curr_path == './dir_one/':
+            other_path = './dir_two/'
+        else:
+            other_path = './dir_one/'
+
+        for file in files_list1:
+            name = file[0]
+            if name in files_list2:
+                if oct(stat.S_IMODE(os.lstat(other_path + name).st_mode)) != oct(stat.S_IMODE(os.lstat(self.curr_path + name).st_mode)):
+                    permi = (stat.S_IMODE(os.lstat(other_path + name).st_mode))
+                    os.chmod(self.curr_path + name, (permi))
 
     def comms(self, command, argv, neg_print = False):
         sock = socket.socket()
