@@ -34,7 +34,18 @@ def send_file(name, conn, curr_path):
         file_loc = file.read(2048)
     file.close()
 
-def comms(conn, curr_path):
+def send_file_udp(fname, conn, curr_path, upd_address):
+    fpath = curr_path + fname
+    size = os.path.getsize(fpath)
+    conn.sendto(struct.pack('I', size), upd_address)
+    f = open(fpath, 'rb')
+    l = f.read(2048)
+    while l:
+        conn.sendto(l, upd_address)
+        l = f.read(2048)
+    f.close()
+
+def comms(conn, curr_path, sudp = None):
 
     data = conn.recv(struct.calcsize('II'))
     command, argv_size = struct.unpack('II', data)
@@ -53,14 +64,22 @@ def comms(conn, curr_path):
         send_hash(flag, argv, conn, curr_path)
         pass
     elif command == 3:
-        argv = conn.recv(argv_size)
-        send_file(argv.decode(), conn, curr_path)
+        argv = conn.recv(argv_size).decode().split(' ')
+        flag = argv[0]
+        fname = argv[1]
+        if flag == 'UDP':
+            data, address = sudp.recvfrom(2048)
+            send_file_udp(fname, sudp, curr_path, address)
+        else:
+            send_file(fname, conn, curr_path)
 
 class Server(Thread):
     def __init__(self, curr_path = './server/', port = 60000):
         Thread.__init__(self)
         self.curr_path = curr_path
         host = os.environ.get('host_name') or ""
+        self.sudp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sudp.bind((host, port))
         self.sock = socket.socket()
         self.sock.bind((host, port))
         self.sock.listen(5)
@@ -69,7 +88,7 @@ class Server(Thread):
         while True:
             conn, address = self.sock.accept()
             print('Got a connection from ', address)
-            comms(conn, self.curr_path)
+            comms(conn, self.curr_path, self.sudp)
             print('Commenced sending')
             conn.close()
 

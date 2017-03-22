@@ -17,7 +17,7 @@ class Client(Thread):
         self.port = port
         self.curr_path = curr_path
         self.host = ""
-        self.thread = Timer(5, self.sync_folders)
+        self.thread = Timer(15, self.sync_folders)
         self.thread.start()
 
     def run(self):
@@ -48,7 +48,7 @@ class Client(Thread):
                 if splitarg[0] == 'TCP':
                     self.comms(3, splitarg[1])
                 elif splitarg[0] == 'UDP':
-                    print('todo')
+                    self.udp_comms(3, command[1])
                 else:
                     print('Flags are incorrect. Usage: TCP or UDP')
             elif command[0] == 'exit':
@@ -56,8 +56,49 @@ class Client(Thread):
             else:
                 print(command[0], 'is an invalid command')
 
+    def udp_comms(self, command, argv, noPrint = False):
+        sock = socket.socket()
+        sock.connect((self.host, self.port))
+        s = bytes(argv, 'utf-8')
+        data = struct.pack("II%ds" % (len(s),), command, len(s), s)
+        sock.send(data)
+        if command == 3:
+            argv = argv.split(' ')
+            fname = argv[1]
+            size = 0
+            sock.close()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.connect((self.host, self.port))
+            sock.send(fname.encode())
+            size = sock.recv(4)
+            size, = struct.unpack('I', size)
+            retval = self.download_file_udp(fname, sock, size)
+        sock.close()
+        return retval
+
+    def download_file_udp(self, fname, sock, size = 0):
+        fpath = self.curr_path + fname
+        with open(fpath, 'wb') as f:
+            recv_now = 0
+            while True:
+                data = sock.recv(2048)
+                if not data:
+                    break
+                f.write(data)
+                recv_now += 2048
+                if recv_now > size:
+                    break
+        client_hash = handler.get_hash(fpath)
+        server_hash = self.comms(2, 'verify ' + fname, True)[1][1]
+        os.utime(fpath, (os.path.getatime(fpath), int(self.comms(2, 'verify ' + fname, True)[1][2])))
+        print('server hash', server_hash, 'client hash', client_hash)
+        if server_hash.startswith(client_hash):
+            print('file transfer successful')
+        else:
+            print('file transfer unsuccessful')
+
     def sync_folders(self):
-        self.thread = Timer(5, self.sync_folders)
+        self.thread = Timer(15, self.sync_folders)
         self.thread.start()
         print('synchronising')
         files_list1 = self.comms(2, 'checkall', True)[1:]
