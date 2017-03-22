@@ -46,7 +46,7 @@ class Client(Thread):
             elif command[0] == 'download':
                 splitarg = command[1].split(' ')
                 if splitarg[0] == 'TCP':
-                    self.comms(3, splitarg[1])
+                    self.comms(3, command[1])
                 elif splitarg[0] == 'UDP':
                     self.udp_comms(3, command[1])
                 else:
@@ -156,9 +156,10 @@ class Client(Thread):
             pass
         elif command == 3:
             string_form = bytes(argv, 'utf-8')
+            argv = argv.split(' ')
             data = struct.pack("II%ds" % (len(string_form),), command, len(string_form), string_form)
             sock.send(data)
-            retval = self.download_file(argv, sock)
+            retval = self.download_file(argv[1], sock)
         sock.close()
         return retval
 
