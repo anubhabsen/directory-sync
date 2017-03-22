@@ -26,7 +26,12 @@ def send_hash(flag, argv, conn, curr_path):
 def send_file(name, conn, curr_path):
 
     path = curr_path + name
-    file = open(path, 'rb')
+    if os.path.isfile(path):
+        file = open(path, 'rb')
+    else:
+        print('Incorrect file path')
+        print('>> ')
+        return
     # conn.send(struct.pack('256s', handler.get_hash(path).encode()))
     file_loc = file.read(2048)
     while file_loc:
@@ -36,7 +41,12 @@ def send_file(name, conn, curr_path):
 
 def send_file_udp(fname, conn, curr_path, upd_address):
     fpath = curr_path + fname
-    size = os.path.getsize(fpath)
+    if os.path.isfile(fpath):
+        size = os.path.getsize(fpath)
+    else:
+        print('Incorrect file path')
+        print('>> ')
+        return
     conn.sendto(struct.pack('I', size), upd_address)
     f = open(fpath, 'rb')
     l = f.read(2048)
@@ -90,5 +100,6 @@ class Server(Thread):
             print('Got a connection from ', address)
             comms(conn, self.curr_path, self.sudp)
             print('Commenced sending')
+            print('>> ')
             conn.close()
 

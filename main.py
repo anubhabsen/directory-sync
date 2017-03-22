@@ -53,6 +53,8 @@ class Client(Thread):
                     print('Flags are incorrect. Usage: TCP or UDP')
             elif command[0] == 'exit':
                 quit()
+            elif command[0] == '':
+                pass
             else:
                 print(command[0], 'is an invalid command')
 
