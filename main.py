@@ -4,21 +4,21 @@ import os
 import socket
 import json
 import sys
-from threading import Thread
+from threading import Thread, Timer
 import handler
 import struct
 import subprocess
 import stat
 from server import Server
-import time
 
 class Client(Thread):
     def __init__(self, curr_path = './client', port = 60000):
         Thread.__init__(self)
         self.port = port
-        self.last_synced = time.time()
         self.curr_path = curr_path
         self.host = ""
+        self.thread = Timer(5, self.sync_folders)
+        self.thread.start()
 
     def run(self):
         while True:
@@ -56,12 +56,9 @@ class Client(Thread):
             else:
                 print(command[0], 'is an invalid command')
 
-            curr_time = time.time()
-            if curr_time - self.last_synced >= 2:
-                self.last_synced = time.time()
-                self.sync_folders()
-
     def sync_folders(self):
+        self.thread = Timer(5, self.sync_folders)
+        self.thread.start()
         print('synchronising')
         files_list1 = self.comms(2, 'checkall', True)[1:]
         files_list2 = []
@@ -173,6 +170,3 @@ if __name__ == '__main__':
     client.start()
     server.join()
     client.join()
-
-
-
