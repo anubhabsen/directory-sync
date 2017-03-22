@@ -20,6 +20,17 @@ def format_data(table):
     print(file_list)
     return file_list
 
+def list_files(curr_path):
+    shared_files = []
+    for file in os.listdir(curr_path):
+        if os.path.isfile(os.path.join(curr_path, file)):
+            shared_files.append(file)
+    for f in os.listdir(curr_path):
+        if os.path.isdir(os.path.join(curr_path, f)):
+            rec_files = list_files(os.path.join(curr_path, f))
+            shared_files += [os.path.join(f, fr) for fr in rec_files]
+    return shared_files
+
 def list_dir(flag, argv, curr_path):
     shared_files = []
     for file in os.listdir(curr_path):
@@ -31,8 +42,8 @@ def list_dir(flag, argv, curr_path):
         time = int(os.path.getmtime(os.path.join(curr_path, file)))
         path = os.path.join(curr_path, file)
         if flag == 'shortlist':
-            start_time = float(argv[0])
-            end_time = float(argv[1])
+            start_time = int(argv[0])
+            end_time = int(argv[1])
             if time < start_time or time > end_time:
                 continue
         elif flag == 'regex':
@@ -52,10 +63,10 @@ def get_hash(path):
         return hash_val.hexdigest()
 
 def list_hash(flag, argv, curr_path):
-    shared_files = []
-    for file in os.listdir(curr_path):
-        if os.path.isfile(os.path.join(curr_path, file)):
-            shared_files.append(file)
+    shared_files = list_files(curr_path)
+    # for file in os.listdir(curr_path):
+    #     if os.path.isfile(os.path.join(curr_path, file)):
+    #         shared_files.append(file)
     table = [['File', 'Hash Value', 'Time Modified']]
     if flag != 'verify' and flag != 'checkall':
         sending = 'incorrect flag given. Usage: flag: verify/ checkall'

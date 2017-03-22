@@ -17,7 +17,7 @@ class Client(Thread):
         self.port = port
         self.curr_path = curr_path
         self.host = ""
-        self.thread = Timer(15, self.sync_folders)
+        self.thread = Timer(30, self.sync_folders)
         self.thread.start()
 
     def run(self):
@@ -100,24 +100,26 @@ class Client(Thread):
             print('file transfer unsuccessful')
 
     def sync_folders(self):
-        self.thread = Timer(15, self.sync_folders)
+        self.thread = Timer(30, self.sync_folders)
         self.thread.start()
-        print('synchronising')
         files_list1 = self.comms(2, 'checkall', True)[1:]
-        files_list2 = []
-        for file in os.listdir(self.curr_path):
-            if os.path.isfile(os.path.join(self.curr_path, file)):
-                files_list2.append(file)
+        files_list2 = handler.list_files(self.curr_path)
         for file in files_list1:
-            name = file[0]
-            if name in files_list2:
-                # res = handler.change_details(self.curr_path + name)
-                res_hash = handler.get_hash(self.curr_path + name)
-                res_time = int(os.path.getmtime(self.curr_path + name))
-                if res_hash != file[1] and res_time < file[2]:
-                    self.comms(3, name)
+            fname = file[0]
+            download = False
+            if fname in files_list2:
+                hs = handler.get_hash(self.curr_path + fname)
+                if hs != file[1]:
+                    if int(os.path.getmtime(self.curr_path + fname)) < file[2]:
+                        download = True
             else:
-                self.comms(3, name)
+                download = True
+
+            if download:
+                print('synchronising')
+                self.comms(3, 'TCP ' + fname)
+
+        print('\n>> ')
 
         if self.curr_path == './dir_one/':
             other_path = './dir_two/'
@@ -145,7 +147,7 @@ class Client(Thread):
             print('=============')
             argv = argv.split(' ')
             flag = argv[0]
-            arg = argv[1:0]
+            arg = argv[1:]
             handler.format_data(handler.list_dir(flag, arg, self.curr_path))
             pass
         elif command == 2:
